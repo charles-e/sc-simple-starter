@@ -1,4 +1,4 @@
-# Safecoin Wallet
+# App Starter Safecoin Wallet
 
 A wallet (and starter application) implementation for Safecoin. Supports typescript. Signs transactions without requiring a background window
 
