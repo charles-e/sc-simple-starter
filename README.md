@@ -5,7 +5,7 @@ A starter react web application implementation for Safecoin. Supports typescript
 ### How we got here
 
 Created with love by taking the Ara's spl-token-wallet and then wrapping it in a craco-based project structure to get something that allows typescript and still resolves the miriad
-dependencies to work with BPF contracts / developing on Safecoin. Once that was setup, realized it still could not sign transactions, so implemented direct. transactions signing.
+dependencies to work with BPF contracts / developing on Safecoin. Once that was setup, realized it still could not sign transactions, so implemented direct transactions signing.
 
 ### Why we got here
 
