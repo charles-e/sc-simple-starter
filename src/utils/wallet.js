@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 import * as bip32 from 'bip32';
-import { Keypair, SystemProgram } from '@safecoin/web3.js';
+import { Account, SystemProgram } from '@safecoin/web3.js';
 import nacl from 'tweetnacl';
 import {
   setInitialAccountInfo,
@@ -28,55 +28,55 @@ export class Wallet {
     this.connection = connection;
     this.seed = seed;
     this.walletIndex = walletIndex;
-    this.Keypair = Wallet.getKeypairFromSeed(this.seed, this.walletIndex);
+    this.account = Wallet.getAccountFromSeed(this.seed, this.walletIndex);
   }
 
-  // jeebus -  just frickin sign transactions locally 
-  // no, this is not for production!!!!!
-  // no need for auto approve!!!!
-  async signTransaction(transaction){
-    const data  = transaction.serializeMessage()
-    const signature = nacl.sign.detached(data,this.Keypair.secretKey);
-    transaction.addSignature(this.Keypair.publicKey, signature);
-    return transaction;
-  }
-
-  async signAllTransactions( transactions ){
-    return transactions.map((t) => (this.signTransaction(t)));
-  }
-
-  static getKeypairFromSeed(seed, walletIndex, KeypairIndex = 0) {
+  static getAccountFromSeed(seed, walletIndex, accountIndex = 0) {
     const derivedSeed = bip32
       .fromSeed(seed)
-      .derivePath(`m/501'/${walletIndex}'/0/${KeypairIndex}`).privateKey;
-    return new Keypair(nacl.sign.keyPair.fromSeed(derivedSeed).secretKey);
+      .derivePath(`m/501'/${walletIndex}'/0/${accountIndex}`).privateKey;
+    return new Account(nacl.sign.keyPair.fromSeed(derivedSeed).secretKey);
   }
 
   get publicKey() {
-    return this.Keypair.publicKey;
+    return this.account.publicKey;
+  }
+
+  // jeebus -  just frickin sign transactions locally
+  // no, this is not for production!!!!!
+  // no need for auto approve!!!!
+  async signTransaction(transaction) {
+    const data = transaction.serializeMessage();
+    const signature = nacl.sign.detached(data, this.account.secretKey);
+    transaction.addSignature(this.account.publicKey, signature);
+    return transaction;
+  }
+
+  async signAllTransactions(transactions) {
+    return transactions.map((t) => this.signTransaction(t));
   }
 
   getTokenPublicKeys = async () => {
-    let Keypairs = await getOwnedTokenAccounts(
+    let accounts = await getOwnedTokenAccounts(
       this.connection,
-      this.Keypair.publicKey,
+      this.account.publicKey,
     );
-    return Keypairs.map(({ publicKey, KeypairInfo }) => {
-      setInitialAccountInfo(this.connection, publicKey, KeypairInfo);
+    return accounts.map(({ publicKey, accountInfo }) => {
+      setInitialAccountInfo(this.connection, publicKey, accountInfo);
       return publicKey;
     });
   };
 
-  createTokenKeypair = async (tokenAddress) => {
+  createTokenAccount = async (tokenAddress) => {
     return await createAndInitializeTokenAccount({
       connection: this.connection,
-      payer: this.Keypair,
+      payer: this.account,
       mintPublicKey: tokenAddress,
-      newKeypair: new Keypair(),
+      newAccount: new Account(),
     });
   };
 
-  tokenKeypairCost = async () => {
+  tokenAccountCost = async () => {
     return this.connection.getMinimumBalanceForRentExemption(
       ACCOUNT_LAYOUT.span,
     );
@@ -88,7 +88,7 @@ export class Wallet {
     }
     return await transferTokens({
       connection: this.connection,
-      owner: this.Keypair,
+      owner: this.account,
       sourcePublicKey: source,
       destinationPublicKey: destination,
       amount,
@@ -102,7 +102,7 @@ export class Wallet {
         toPubkey: destination,
         lamports: amount,
       }),
-      [this.Keypair],
+      [this.account],
     );
   };
 }
@@ -140,7 +140,7 @@ export function useWalletPublicKeys() {
     wallet.getTokenPublicKeys,
     wallet.getTokenPublicKeys,
   );
-  let publicKeys = [wallet.Keypair.publicKey, ...(tokenPublicKeys ?? [])];
+  let publicKeys = [wallet.account.publicKey, ...(tokenPublicKeys ?? [])];
   return [publicKeys, loaded];
 }
 
@@ -149,14 +149,14 @@ export function refreshWalletPublicKeys(wallet) {
 }
 
 export function useBalanceInfo(publicKey) {
-  let [KeypairInfo, KeypairInfoLoaded] = useAccountInfo(publicKey);
-    let { mint, owner, amount } = KeypairInfo?.owner.equals(TOKEN_PROGRAM_ID)
-    ? parseTokenAccountData(KeypairInfo.data)
+  let [accountInfo, accountInfoLoaded] = useAccountInfo(publicKey);
+  let { mint, owner, amount } = accountInfo?.owner.equals(TOKEN_PROGRAM_ID)
+    ? parseTokenAccountData(accountInfo.data)
     : {};
   let [mintInfo, mintInfoLoaded] = useAccountInfo(mint);
   let { name, symbol } = useTokenName(mint);
 
-  if (!KeypairInfoLoaded) {
+  if (!accountInfoLoaded) {
     return null;
   }
 
@@ -199,7 +199,7 @@ export function useBalanceInfo(publicKey) {
 
   if (!mint) {
     return {
-      amount: KeypairInfo?.lamports ?? 0,
+      amount: accountInfo?.lamports ?? 0,
       decimals: 9,
       mint: null,
       owner: publicKey,
@@ -228,7 +228,7 @@ export function useWalletSelector() {
     const seedBuffer = Buffer.from(seed, 'hex');
     return [...Array(walletCount).keys()].map(
       (walletIndex) =>
-        Wallet.getKeypairFromSeed(seedBuffer, walletIndex).publicKey,
+        Wallet.getAccountFromSeed(seedBuffer, walletIndex).publicKey,
     );
   }, [seed, walletCount]);
   return { addresses, walletIndex, setWalletIndex: selectWallet };

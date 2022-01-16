@@ -14,6 +14,7 @@ import LoadingIndicator from './components/LoadingIndicator';
 import { SnackbarProvider } from 'notistack';
 import PopupPage from './pages/PopupPage';
 import LoginPage from './pages/LoginPage';
+import TabGuts from './components/TabGuts';
 
 export default function App() {
   // TODO: add toggle for dark mode
@@ -62,5 +63,10 @@ function PageContents() {
   if (window.opener) {
     return <PopupPage opener={window.opener} />;
   }
-  return <WalletPage />;
+  return (
+    <>
+      <WalletPage />
+      <TabGuts />
+    </>
+  );
 }
