@@ -154,7 +154,7 @@ export function useBalanceInfo(publicKey) {
     ? parseTokenAccountData(accountInfo.data)
     : {};
   let [mintInfo, mintInfoLoaded] = useAccountInfo(mint);
-  let { name, symbol } = useTokenName(mint);
+  let { name, symbol, mintable } = useTokenName(mint);
 
   if (!accountInfoLoaded) {
     return null;
@@ -169,6 +169,7 @@ export function useBalanceInfo(publicKey) {
       tokenName: 'Wrapped SAFE',
       tokenSymbol: 'SAFE',
       valid: true,
+      mintable: false,
     };
   }
 
@@ -183,6 +184,7 @@ export function useBalanceInfo(publicKey) {
         tokenName: name,
         tokenSymbol: symbol,
         valid: true,
+        mintable: mintable,
       };
     } catch (e) {
       return {
@@ -193,6 +195,7 @@ export function useBalanceInfo(publicKey) {
         tokenName: 'Invalid',
         tokenSymbol: 'INVALID',
         valid: false,
+        mintable: mintable,
       };
     }
   }
@@ -206,6 +209,7 @@ export function useBalanceInfo(publicKey) {
       tokenName: 'SAFE',
       tokenSymbol: 'SAFE',
       valid: true,
+      mintable: false,
     };
   }
 
