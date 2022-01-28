@@ -53,6 +53,7 @@ export default function AddTokenDialog({ open, onClose }) {
   let [mintAddress, setMintAddress] = useState('');
   let [tokenName, setTokenName] = useState('');
   let [tokenSymbol, setTokenSymbol] = useState('');
+  let [tokenMintable, setTokenMintable] = useState(false);
   let [sendTransaction, sending] = useSendTransaction();
   const { endpoint } = useConnectionConfig();
   const popularTokens = TOKENS[endpoint];
@@ -64,11 +65,11 @@ export default function AddTokenDialog({ open, onClose }) {
     }
   }, [popularTokens]);
 
-  function onSubmit({ mintAddress, tokenName, tokenSymbol }) {
+  function onSubmit({ mintAddress, tokenName, tokenSymbol, tokenMintable }) {
     let mint = new PublicKey(mintAddress);
     sendTransaction(wallet.createTokenAccount(mint), {
       onSuccess: () => {
-        updateTokenName(mint, tokenName, tokenSymbol);
+        updateTokenName(mint, tokenName, tokenSymbol, tokenMintable);
         refreshWalletPublicKeys(wallet);
         onClose();
       },
@@ -82,7 +83,7 @@ export default function AddTokenDialog({ open, onClose }) {
         {tokenAccountCost ? (
           <DialogContentText>
             Add a token to your wallet. This will cost{' '}
-            {feeFormat.format(tokenAccountCost / LAMPORTS_PER_SAFE)} Solana.
+            {feeFormat.format(tokenAccountCost / LAMPORTS_PER_SAFE)} Safecoin.
           </DialogContentText>
         ) : (
           <LoadingIndicator />
@@ -169,6 +170,7 @@ function TokenListItem({
   tokenName,
   tokenSymbol,
   mintAddress,
+  tokenMintable,
   onSubmit,
   disabled,
 }) {
@@ -185,12 +187,13 @@ function TokenListItem({
                 target="_blank"
                 rel="noopener"
                 href={
-                  `https://explorer.solana.com/account/${mintAddress}` +
+                  `https://explorer.safecoin.org/account/${mintAddress}` +
                   urlSuffix
                 }
               >
                 {tokenName ?? abbreviateAddress(mintAddress)}
                 {tokenSymbol ? ` (${tokenSymbol})` : null}
+                {tokenMintable ? ` (Mintable!)` : null}
               </Link>
             }
           />
@@ -200,7 +203,9 @@ function TokenListItem({
           type="submit"
           color="primary"
           disabled={disabled || alreadyExists}
-          onClick={() => onSubmit({ tokenName, tokenSymbol, mintAddress })}
+          onClick={() =>
+            onSubmit({ tokenName, tokenSymbol, mintAddress, tokenMintable })
+          }
         >
           {alreadyExists ? 'Added' : 'Add'}
         </Button>

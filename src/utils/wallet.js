@@ -169,7 +169,7 @@ export function useBalanceInfo(publicKey) {
       tokenName: 'Wrapped SAFE',
       tokenSymbol: 'SAFE',
       valid: true,
-      mintable: false,
+      tokenMintable: false,
     };
   }
 
@@ -184,7 +184,7 @@ export function useBalanceInfo(publicKey) {
         tokenName: name,
         tokenSymbol: symbol,
         valid: true,
-        mintable: mintable,
+        tokenMintable: mintable,
       };
     } catch (e) {
       return {
@@ -195,7 +195,7 @@ export function useBalanceInfo(publicKey) {
         tokenName: 'Invalid',
         tokenSymbol: 'INVALID',
         valid: false,
-        mintable: mintable,
+        tokenMintable: mintable,
       };
     }
   }
@@ -209,7 +209,7 @@ export function useBalanceInfo(publicKey) {
       tokenName: 'SAFE',
       tokenSymbol: 'SAFE',
       valid: true,
-      mintable: false,
+      tokenMintable: false,
     };
   }
 
